@@ -15,6 +15,13 @@
     "embed"
   ],
   "main": "./dist/player.js",
+  "module": "./dist/player.js",
+  "exports": {
+    ".": {
+      "import": "./dist/player.js",
+      "require": "./dist/player.js"
+    }
+  },
   "types": "./dist/player.d.ts",
   "author": "Chocobozzz",
   "license": "AGPL-3.0",

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ESNext",
     "removeComments": true,
     "sourceMap": false,
     "typeRoots": [
@@ -8,7 +8,7 @@
     ],
     "outDir": "./dist",
     "declaration": true,
-    "target": "es5",
+    "target": "ESNext",
     "types": [],
     "lib": [
       "es2018",
