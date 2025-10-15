@@ -10,8 +10,8 @@ export class VideoFetcher {
 
   }
 
-  async loadVideo ({ videoId, videoPassword }: { videoId: string, videoPassword?: string }) {
-    const videoPromise = this.loadVideoInfo({ videoId, videoPassword })
+  async loadVideo ({ videoId, videoPassword, authToken }: { videoId: string, videoPassword?: string, authToken?: string }) {
+    const videoPromise = this.loadVideoInfo({ videoId, videoPassword, authToken })
 
     let videoResponse: Response
     let isResponseOk: boolean
@@ -30,6 +30,10 @@ export class VideoFetcher {
         throw new Error('This video does not exist.')
       }
       if (videoResponse?.status === HttpStatusCode.FORBIDDEN_403) {
+        const res = await videoResponse.json()
+        throw new PeerTubeServerError(res.message || res.detail, res.code)
+      }
+      if (videoResponse?.status === HttpStatusCode.UNAUTHORIZED_401) {
         const res = await videoResponse.json()
         throw new PeerTubeServerError(res.message || res.detail, res.code)
       }
@@ -58,8 +62,10 @@ export class VideoFetcher {
     return this.getVideoUrl(videoUUID) + '/views'
   }
 
-  private loadVideoInfo ({ videoId, videoPassword }: { videoId: string, videoPassword?: string }): Promise<Response> {
-    return this.http.fetch(this.getVideoUrl(videoId), { optionalAuth: true }, videoPassword)
+  private loadVideoInfo (
+    { videoId, videoPassword, authToken }: { videoId: string, videoPassword?: string, authToken?: string }
+  ): Promise<Response> {
+    return this.http.fetch(this.getVideoUrl(videoId), { optionalAuth: true }, videoPassword, authToken)
   }
 
   private loadVideoCaptions ({ videoId, videoPassword }: { videoId: string, videoPassword?: string }): Promise<Response> {

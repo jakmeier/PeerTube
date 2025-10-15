@@ -220,6 +220,19 @@ export class PeerTubePlayer {
   }
 
   /**
+   * Set auth token of the user to access private videos.
+   *
+   * Setting the token is only necessary if the user has no active session
+   * stored in cookies. This situation comes up with external frontends that
+   * manage authentication through API tokens only.
+   *
+   * @param password
+   */
+  async setAuthToken (token: string): Promise<void> {
+    await this.sendMessage('setAuthToken', token)
+  }
+
+  /**
    * Get video frame image as data url
    */
   async getImageDataUrl (): Promise<string> {

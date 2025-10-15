@@ -59,6 +59,8 @@ export class PeerTubeEmbed {
   private onVideoPasswordFromAPIResolver: (value: string) => void
   private requiresPassword: boolean
 
+  private authToken: string
+
   constructor (videoWrapperId: string) {
     logger.registerServerSending(getBackendUrl())
 
@@ -176,6 +178,14 @@ export class PeerTubeEmbed {
 
   // ---------------------------------------------------------------------------
 
+  setAuthTokenByAPI (token: string) {
+    logger.info('Setting auth token from API')
+
+    this.authToken = token
+  }
+
+  // ---------------------------------------------------------------------------
+
   async playNextPlaylistVideo () {
     const next = this.playlistTracker.getNextPlaylistElement()
     if (!next) {
@@ -215,17 +225,21 @@ export class PeerTubeEmbed {
     this.playerOptionsBuilder.loadCommonParams()
     this.initializeApi()
 
+    const prevToken = this.authToken
     try {
       const {
         videoResponse,
         captionsPromise,
         chaptersPromise,
         storyboardsPromise
-      } = await this.videoFetcher.loadVideo({ videoId: uuid, videoPassword: this.videoPassword })
+      } = await this.videoFetcher.loadVideo({ videoId: uuid, videoPassword: this.videoPassword, authToken: this.authToken })
 
       return this.buildVideoPlayer({ videoResponse, captionsPromise, chaptersPromise, storyboardsPromise, forceAutoplay })
     } catch (err) {
-      if (await this.handlePasswordError(err)) this.loadVideoAndBuildPlayer({ ...options })
+      const hasNewPassword = await this.handlePasswordError(err)
+      // TODO: this is a race condition and bad design, the auth token should be set before the first attempt when it's needed
+      const hasNewToken = this.authToken !== prevToken
+      if (hasNewPassword || hasNewToken) this.loadVideoAndBuildPlayer({ ...options })
       else this.playerHTML.displayError(err.message, await this.translationsPromise)
     }
   }
@@ -303,7 +317,7 @@ export class PeerTubeEmbed {
 
     if (!this.alreadyInitialized) {
       this.player = this.peertubePlayer.getPlayer()
-      ;(window as any)['videojsPlayer'] = this.player
+        ;(window as any)['videojsPlayer'] = this.player
 
       this.buildCSS()
 
@@ -455,7 +469,7 @@ export class PeerTubeEmbed {
 
     const constructorOptions = this.playerOptionsBuilder.getPlayerConstructorOptions({
       serverConfig: this.config,
-      authorizationHeader: () => this.http.getHeaderTokenValue()
+      authorizationHeader: () => this.http.getHeaderTokenValue() || "Bearer " + this.authToken
     })
     this.peertubePlayer = new PeerTubePlayer(constructorOptions)
 
