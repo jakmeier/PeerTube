@@ -44,6 +44,8 @@ export class PeerTubeEmbedApi {
 
     channel.bind('setVideoPassword', (txn, value) => this.embed.setVideoPasswordByAPI(value))
 
+    channel.bind('setAuthToken', (txn, value) => this.embed.setAuthTokenByAPI(value))
+
     channel.bind('isPlaying', (txn) => !this.player.paused())
 
     channel.bind('play', (txn, params) => {
