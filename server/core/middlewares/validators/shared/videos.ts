@@ -143,7 +143,9 @@ export async function checkCanSeeUserAuthVideo (options: {
     return false
   }
 
-  await authenticatePromise({ req, res })
+  const errorMessage = 'Please authenticate to access this private video'
+  const errorType = ServerErrorCode.VIDEO_REQUIRES_AUTHORIZATION
+  await authenticatePromise({ req, res, errorMessage, errorType })
 
   const user = res.locals.oauth?.token.User
   if (!user) return fail()

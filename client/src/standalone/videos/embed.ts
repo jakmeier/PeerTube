@@ -58,8 +58,9 @@ export class PeerTubeEmbed {
   private videoPasswordFromAPI: string
   private onVideoPasswordFromAPIResolver: (value: string) => void
   private requiresPassword: boolean
-
+  
   private authToken: string
+  private onAuthTokenFromAPIResolver: () => void
 
   constructor (videoWrapperId: string) {
     logger.registerServerSending(getBackendUrl())
@@ -182,6 +183,18 @@ export class PeerTubeEmbed {
     logger.info('Setting auth token from API')
 
     this.authToken = token
+
+    if (this.onAuthTokenFromAPIResolver) {
+      this.onAuthTokenFromAPIResolver()
+    }
+  }
+
+  private waitForAuthTokenByAPI () {
+    if (this.authToken) return Promise.resolve()
+
+    return new Promise<void>(res => {
+      this.onAuthTokenFromAPIResolver = res
+    })
   }
 
   // ---------------------------------------------------------------------------
@@ -236,10 +249,10 @@ export class PeerTubeEmbed {
 
       return this.buildVideoPlayer({ videoResponse, captionsPromise, chaptersPromise, storyboardsPromise, forceAutoplay })
     } catch (err) {
-      const hasNewPassword = await this.handlePasswordError(err)
-      // TODO: this is a race condition and bad design, the auth token should be set before the first attempt when it's needed
-      const hasNewToken = this.authToken !== prevToken
-      if (hasNewPassword || hasNewToken) this.loadVideoAndBuildPlayer({ ...options })
+      let retry = await this.handlePasswordError(err)
+      if (!retry) retry = await this.handleAuthError(err)
+      
+      if (retry) this.loadVideoAndBuildPlayer({ ...options })
       else this.playerHTML.displayError(err.message, await this.translationsPromise)
     }
   }
@@ -436,6 +449,15 @@ export class PeerTubeEmbed {
       translations: await this.translationsPromise
     })
 
+    return true
+  }
+
+  private async handleAuthError (err: PeerTubeServerError) {
+    if (err.serverCode !== ServerErrorCode.VIDEO_REQUIRES_AUTHORIZATION) return false
+
+    await this.waitForAuthTokenByAPI()
+    // TODO: notify emebd API that we are waiting
+    
     return true
   }
 
