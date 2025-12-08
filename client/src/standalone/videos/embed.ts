@@ -27,12 +27,15 @@ import {
   getBackendUrl
 } from './shared'
 import { PlayerHTML } from './shared/player-html'
+import { Message } from 'jschannel'
 
 export class PeerTubeEmbed {
   player: videojs.Player
   api: PeerTubeEmbedApi = null
 
   config: HTMLServerConfig
+
+  notifyChannel:(message: Message) => void
 
   private translationsPromise: Promise<{ [id: string]: string }>
   private PeerTubePlayerManagerModulePromise: Promise<any>
@@ -192,10 +195,10 @@ export class PeerTubeEmbed {
   private waitForAuthTokenByAPI () {
     if (this.authToken) return Promise.resolve()
 
-    return new Promise<void>(res => {
-      this.onAuthTokenFromAPIResolver = res
-    })
-  }
+      return new Promise<void>(res => {
+        this.onAuthTokenFromAPIResolver = res
+      })
+    }
 
   // ---------------------------------------------------------------------------
 
@@ -238,7 +241,6 @@ export class PeerTubeEmbed {
     this.playerOptionsBuilder.loadCommonParams()
     this.initializeApi()
 
-    const prevToken = this.authToken
     try {
       const {
         videoResponse,
@@ -455,8 +457,10 @@ export class PeerTubeEmbed {
   private async handleAuthError (err: PeerTubeServerError) {
     if (err.serverCode !== ServerErrorCode.VIDEO_REQUIRES_AUTHORIZATION) return false
 
+    this.authToken = null
+    this.notifyChannel( { method: 'authFailed' } )
+
     await this.waitForAuthTokenByAPI()
-    // TODO: notify emebd API that we are waiting
     
     return true
   }
@@ -489,6 +493,10 @@ export class PeerTubeEmbed {
 
     this.videojs = videojs
 
+    if (this.playerOptionsBuilder.mustWaitAuthTokenFromEmbedAPI()) {
+      await this.waitForAuthTokenByAPI()
+    }
+    
     const constructorOptions = this.playerOptionsBuilder.getPlayerConstructorOptions({
       serverConfig: this.config,
       authorizationHeader: () => this.http.getHeaderTokenValue() || "Bearer " + this.authToken

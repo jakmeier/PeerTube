@@ -349,3 +349,10 @@ Fired when the available resolutions have changed, or when the currently selecte
 ### Event `volumeChange`
 
 Fired when the player volume changed.
+
+**PeerTube >= UNRELEASED**
+
+### Event `authFailed`
+
+Fired when authentication failed while trying to load a private video. This can happen when no auth token was set or when it expired.
+

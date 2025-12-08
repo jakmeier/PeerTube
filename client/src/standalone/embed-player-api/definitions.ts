@@ -5,7 +5,8 @@ export type PlayerEventType =
   'playbackStatusUpdate' |
   'playbackStatusChange' |
   'resolutionUpdate' |
-  'volumeChange'
+  'volumeChange' |
+  'authFailed'
 
 export interface PeerTubeResolution {
   id: any

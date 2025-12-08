@@ -8,7 +8,8 @@ const PASSTHROUGH_EVENTS = [
   'playbackStatusUpdate',
   'playbackStatusChange',
   'resolutionUpdate',
-  'volumeChange'
+  'volumeChange',
+  'authFailed'
 ]
 
 /**

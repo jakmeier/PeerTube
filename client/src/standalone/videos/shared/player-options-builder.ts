@@ -55,6 +55,8 @@ export class PlayerOptionsBuilder {
 
   private waitPasswordFromEmbedAPI = false
 
+  private requiresAuth = false
+
   private mode: PlayerMode
   private scope = 'peertube'
 
@@ -116,6 +118,10 @@ export class PlayerOptionsBuilder {
     return this.waitPasswordFromEmbedAPI
   }
 
+  mustWaitAuthTokenFromEmbedAPI () {
+    return this.requiresAuth
+  }
+
   // ---------------------------------------------------------------------------
 
   loadCommonParams () {
@@ -130,6 +136,7 @@ export class PlayerOptionsBuilder {
       this.title = getParamToggle(params, 'title', true)
       this.enableApi = getParamToggle(params, 'api', this.enableApi)
       this.waitPasswordFromEmbedAPI = getParamToggle(params, 'waitPasswordFromEmbedAPI', this.waitPasswordFromEmbedAPI)
+      this.requiresAuth = getParamToggle(params, 'requiresAuth', this.requiresAuth)
       this.warningTitle = getParamToggle(params, 'warningTitle', true)
       this.peertubeLink = getParamToggle(params, 'peertubeLink', true)
 

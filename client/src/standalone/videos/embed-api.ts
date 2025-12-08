@@ -83,6 +83,8 @@ export class PeerTubeEmbedApi {
 
     channel.bind('getImageDataUrl', (txn, params) => this.embed.getImageDataUrl())
 
+    this.embed.notifyChannel = channel.notify;
+
     this.channel = channel
   }
 
